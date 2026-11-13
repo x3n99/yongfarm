@@ -80,6 +80,15 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
   }
 
   if (action === 'sales_create' || action === 'sales_update') {
+    const saleId = action === 'sales_update' ? id(form) : null;
+    if (saleId !== null) {
+      const { data: existingSale, error: lookupError } = await locals.supabase
+        .from('penjualan').select('order_id').eq('id_penjualan', saleId).maybeSingle();
+      if (lookupError) throw new Error(`Unable to check sale source: ${lookupError.message}`);
+      if (existingSale?.order_id !== null && existingSale?.order_id !== undefined) {
+        throw new Error('This sale is managed by its completed order and cannot be edited here.');
+      }
+    }
     const quantity = numeric(form, 'jumlah_unit', 1, true);
     const unit = text(form, 'satuan', 20) as keyof typeof units;
     if (!Object.hasOwn(units, unit)) throw new Error('Invalid unit.');
@@ -117,13 +126,20 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
     };
     const result = action === 'sales_create'
       ? await locals.supabase.from('penjualan').insert(record)
-      : await locals.supabase.from('penjualan').update(record).eq('id_penjualan', id(form));
+      : await locals.supabase.from('penjualan').update(record).eq('id_penjualan', saleId);
     if (result.error) throw new Error(`Sales update failed: ${result.error.message}`);
     return redirect('/sales', 303);
   }
 
   if (action === 'sales_delete') {
-    const { error } = await locals.supabase.from('penjualan').delete().eq('id_penjualan', id(form));
+    const saleId = id(form);
+    const { data: sale, error: lookupError } = await locals.supabase
+      .from('penjualan').select('order_id').eq('id_penjualan', saleId).maybeSingle();
+    if (lookupError) throw new Error(`Unable to check sale source: ${lookupError.message}`);
+    if (sale?.order_id !== null && sale?.order_id !== undefined) {
+      throw new Error('This sale is linked to a completed order and cannot be deleted here.');
+    }
+    const { error } = await locals.supabase.from('penjualan').delete().eq('id_penjualan', saleId);
     if (error) throw new Error(`Unable to delete sale: ${error.message}`);
     return redirect('/sales', 303);
   }
@@ -146,8 +162,14 @@ export const POST: APIRoute = async ({ request, locals, redirect, url }) => {
 
   if (action === 'order_status') {
     const status = text(form, 'status', 20);
-    if (!['Pending', 'Processing', 'Completed'].includes(status)) throw new Error('Invalid order status.');
-    const { error } = await locals.supabase.from('pesanan').update({ status }).eq('id', id(form));
+    if (!['Pending', 'Processing', 'Completed', 'Cancelled'].includes(status)) {
+      throw new Error('Invalid order status.');
+    }
+    const { error } = await locals.supabase.rpc('set_order_status', {
+      p_order_id: id(form),
+      p_status: status,
+      p_sale_date: businessDate(),
+    });
     if (error) throw new Error(`Unable to update order status: ${error.message}`);
     return redirect('/orders', 303);
   }

@@ -17,7 +17,8 @@ Yong Farm is an Astro server-rendered farm and egg-ordering website. Supabase pr
    ```
 
 2. Copy `.env.example` to `.env` and set `SUPABASE_URL` and `SUPABASE_ANON_KEY` from your Supabase project API settings.
-3. Run the migration in `supabase/migrations/20261113000000_initial_schema.sql` from the Supabase SQL Editor. Optionally run `supabase/seed.sql` to add sample products.
+3. Run every migration in `supabase/migrations/` in filename order from the Supabase SQL Editor. For an existing project, run any migration that has not been applied yet. Optionally run `supabase/seed.sql` to add sample products.
+   - The orders-and-sales migration links completed orders to one sale, updating sales, revenue, and stock together. Existing completed orders are intentionally not converted; review them manually to avoid duplicate sales.
 4. Start Astro:
 
    ```sh

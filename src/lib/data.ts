@@ -31,6 +31,7 @@ export type ProductionRecord = {
 };
 export type SaleRecord = {
   id_penjualan: number;
+  order_id: number | null;
   tanggal: string;
   nama_pembeli: string;
   produk: string;
@@ -53,7 +54,7 @@ export type OrderRecord = {
   satuan: string;
   jumlah: number;
   pesan: string | null;
-  status: string;
+  status: 'Pending' | 'Processing' | 'Completed' | 'Cancelled';
   created_at: string;
 };
 

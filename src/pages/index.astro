@@ -11,34 +11,48 @@ const prices = await queryAll<PriceRecord>((from, to) => Astro.locals.supabase.f
   .lte('tanggal_berlaku', businessDate())
   .order('tanggal_berlaku', { ascending: false }).order('id_harga', { ascending: false }).range(from, to));
 const latestPrices = new Map<string, number>();
-for (const price of prices) if (!latestPrices.has(price.produk)) latestPrices.set(price.produk, Number(price.harga));
+const latestPriceDates = new Map<string, string>();
+for (const price of prices) {
+  if (latestPrices.has(price.produk)) continue;
+  latestPrices.set(price.produk, Number(price.harga));
+  latestPriceDates.set(price.produk, price.tanggal_berlaku);
+}
+const formatPriceDate = (value: string) => new Intl.DateTimeFormat('en-MY', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+}).format(new Date(`${value}T00:00:00Z`));
 const success = Astro.url.searchParams.get('success');
 ---
 <BaseLayout title="Fresh farm eggs">
   <div class="public-site">
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="announcement-bar">
       <span class="announcement-dot" aria-hidden="true"></span>
       Fresh from our farm, thoughtfully brought to your table
     </div>
-    <header class="site-header">
-      <a class="site-brand" href="/" aria-label="Yong Farm home">
-        <img src="https://x3n99.github.io/logotelur.png" alt="" />
-        <span>Yong Farm<small>GOOD FOOD, GROWN WITH CARE</small></span>
-      </a>
-      <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav">
-        <span></span>
-      </button>
-      <nav class="site-nav" id="main-nav" aria-label="Main navigation">
-        <a href="#farm">Our farm</a>
-        <a href="#products">Our eggs</a>
-        <a href="#order">How to order</a>
-        <a class="button" href="#order">Order fresh eggs <span class="button-arrow" aria-hidden="true">↗</span></a>
-      </nav>
-    </header>
+    <div class="site-header-wrap">
+      <header class="site-header">
+        <a class="site-brand" href="/" aria-label="Yong Farm home">
+          <img src="https://x3n99.github.io/logotelur.png" alt="" width="64" height="64" />
+          <span>Yong Farm<small>GOOD FOOD, GROWN WITH CARE</small></span>
+        </a>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav">
+          <span></span>
+        </button>
+        <nav class="site-nav" id="main-nav" aria-label="Main navigation">
+          <a href="#farm">Our farm</a>
+          <a href="#products">Our eggs</a>
+          <a href="#order">How to order</a>
+          <a class="button" href="#order">Order fresh eggs <span class="button-arrow" aria-hidden="true">↗</span></a>
+        </nav>
+      </header>
+    </div>
 
     {success && <p class="notice section" role="status">{success}</p>}
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="hero-section">
         <div class="hero-copy">
           <p class="eyebrow"><span class="eyebrow-mark"></span> A little closer to the farm</p>
@@ -51,7 +65,7 @@ const success = Astro.url.searchParams.get('success');
           <div class="hero-caption"><span class="caption-seal" aria-hidden="true">Y</span> Thoughtfully raised. Carefully gathered. Ready for your table.</div>
         </div>
         <div class="hero-visual">
-          <img src="https://x3n99.github.io/logotelur.png" alt="Illustration of fresh eggs gathered on a farm" fetchpriority="high" />
+          <img src="https://x3n99.github.io/logotelur.png" alt="Illustration of a farm and freshly gathered eggs" width="960" height="760" fetchpriority="high" />
           <div class="hero-note"><strong>From our farm</strong><span>Made with care, from the first morning gathering to your kitchen.</span></div>
         </div>
       </section>
@@ -66,7 +80,7 @@ const success = Astro.url.searchParams.get('success');
 
       <section class="section story-section" id="farm">
         <div class="story-card" data-reveal>
-          <div class="story-art" aria-hidden="true"><img src="https://x3n99.github.io/logotelur.png" alt="Illustration of fresh eggs gathered on a farm" fetchpriority="high" /></div>
+          <div class="story-art" aria-hidden="true"><img src="https://x3n99.github.io/logotelur.png" alt="" width="600" height="440" loading="lazy" decoding="async" /></div>
           <div class="story-copy">
             <p class="eyebrow"><span class="eyebrow-mark"></span> Our way of farming</p>
             <h2>Care you can taste.<br /><em>Quality you can trust.</em></h2>
@@ -80,11 +94,11 @@ const success = Astro.url.searchParams.get('success');
         </div>
       </section>
 
-      <section class="section" id="products">
+      <section class="section" id="products" aria-labelledby="products-heading">
         <div class="section-heading" data-reveal>
           <div>
             <p class="eyebrow"><span class="eyebrow-mark"></span> From our farm to your table</p>
-            <h2>Find your farm favourite.</h2>
+            <h2 id="products-heading">Find your farm favourite.</h2>
           </div>
           <p class="muted">A little something for breakfast, baking and all the good meals in between.</p>
         </div>
@@ -93,7 +107,7 @@ const success = Astro.url.searchParams.get('success');
             {products.map((product) => (
               <article class="product-card" data-reveal>
                 <div class="product-art">
-                  <span class="product-label">Farm favourite</span>
+                  <span class="product-label">From our collection</span>
                   <img
                     src={product.image || '/img/egg-art.svg'}
                     data-image-fallback="/img/egg-art.svg"
@@ -104,11 +118,19 @@ const success = Astro.url.searchParams.get('success');
                 </div>
                 <div class="product-info">
                   <h3>{product.nama}</h3>
-                  <p>{product.deskripsi}</p>
-                  <div class="product-price">
-                    <span>{latestPrices.has(product.nama) ? `${formatMoney(latestPrices.get(product.nama)!)} / egg` : 'Ask for today’s price'}</span>
-                    <small>Fresh from the farm</small>
-                  </div>
+                  {product.deskripsi && <p>{product.deskripsi}</p>}
+                  {latestPrices.has(product.nama) ? (
+                    <>
+                      <div class="product-prices">
+                        <div><span>Per egg</span><strong>{formatMoney(latestPrices.get(product.nama)!)}</strong></div>
+                        <div><span>Tray · 30 eggs</span><strong>{formatMoney(latestPrices.get(product.nama)! * units.tray)}</strong></div>
+                      </div>
+                      <p class="price-effective">Effective {formatPriceDate(latestPriceDates.get(product.nama)!)}</p>
+                    </>
+                  ) : <p class="price-effective">Ask us for today’s price.</p>}
+                  <a class="product-order-link" href="#order" data-order-product={product.nama}>
+                    Order this product <span aria-hidden="true">↗</span>
+                  </a>
                 </div>
               </article>
             ))}
@@ -124,15 +146,18 @@ const success = Astro.url.searchParams.get('success');
             <p class="eyebrow"><span class="eyebrow-mark"></span> A fresh order, made simple</p>
             <h2>Good things are just an order away.</h2>
             <p>Tell us what you need and our team will be in touch to confirm availability, delivery and today’s details.</p>
-            <div class="order-points">
-              <span><b aria-hidden="true">✓</b> Choose your favourite eggs</span>
-              <span><b aria-hidden="true">✓</b> Pick a pack size that works for you</span>
-              <span><b aria-hidden="true">✓</b> We’ll confirm your order personally</span>
-            </div>
+            <ol class="order-steps" aria-label="What happens after you send an order request">
+              <li><span aria-hidden="true">01</span><div><strong>Send your request</strong><small>Choose your eggs and share the delivery address.</small></div></li>
+              <li><span aria-hidden="true">02</span><div><strong>We confirm the details</strong><small>Our team checks availability, final price and delivery.</small></div></li>
+              <li><span aria-hidden="true">03</span><div><strong>We arrange the order</strong><small>We’ll contact you with the next steps.</small></div></li>
+            </ol>
+            <a class="order-contact" href="https://wa.me/60123456789" target="_blank" rel="noopener noreferrer">
+              Questions before ordering? Chat with our team <span aria-hidden="true">↗</span>
+            </a>
           </div>
-          <form class="order-card order-form" method="post" action="/api/actions" data-reveal>
+          <form class="order-card order-form" method="post" action="/api/actions" aria-labelledby="order-form-heading" data-reveal>
             <div class="wide">
-              <h3>Place an order</h3>
+              <h3 id="order-form-heading">Place an order</h3>
               <p>Share a few details and we’ll take it from there.</p>
             </div>
             <input type="hidden" name="action" value="order_create" />
@@ -146,8 +171,9 @@ const success = Astro.url.searchParams.get('success');
             <div class="price-estimate wide" aria-live="polite" aria-atomic="true">
               <div><span>Estimated subtotal</span><strong id="order-estimate">—</strong></div>
               <p id="order-estimate-details">Choose a product and pack size to preview the total.</p>
-              <small>Estimate only. Our team will confirm the final price and delivery details.</small>
+              <small>Estimate covers eggs only. We’ll confirm availability, delivery fee and final price.</small>
             </div>
+            <p class="order-privacy wide">We use your details to respond to this request. <a href="/privacy">Read our privacy notice</a>.</p>
             <button class="wide" type="submit">Send order request <span class="button-arrow" aria-hidden="true">↗</span></button>
           </form>
         </div>
@@ -159,7 +185,7 @@ const success = Astro.url.searchParams.get('success');
         <div class="footer-main">
           <div class="footer-about" data-reveal>
             <a class="site-brand footer-brand" href="/">
-              <img src="https://x3n99.github.io/logotelur.png" alt="" />
+              <img src="https://x3n99.github.io/logotelur.png" alt="" width="64" height="64" />
               <span>Yong Farm<small>GOOD FOOD, GROWN WITH CARE</small></span>
             </a>
             <p>Thoughtfully raised and carefully selected eggs, from our farm to your family table.</p>
@@ -170,6 +196,8 @@ const success = Astro.url.searchParams.get('success');
               <a href="#farm">Our farm</a>
               <a href="#products">Our eggs</a>
               <a href="#order">Place an order</a>
+              <a href="/delivery">Delivery &amp; payment</a>
+              <a href="/privacy">Privacy notice</a>
             </nav>
           </div>
           <div class="footer-column footer-contact" data-reveal>
@@ -262,6 +290,14 @@ const success = Astro.url.searchParams.get('success');
     orderQuantity?.addEventListener('input', updateOrderEstimate);
     orderUnit?.addEventListener('change', updateOrderEstimate);
     updateOrderEstimate();
+    document.querySelectorAll<HTMLAnchorElement>('[data-order-product]').forEach((link) => {
+      link.addEventListener('click', () => {
+        const productName = link.dataset.orderProduct;
+        if (!productName || !orderProduct) return;
+        orderProduct.value = productName;
+        updateOrderEstimate();
+      });
+    });
     if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const revealObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach((entry) => {

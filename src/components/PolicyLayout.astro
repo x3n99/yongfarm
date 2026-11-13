@@ -1,0 +1,33 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<BaseLayout title={title}>
+  <a class="skip-link" href="#policy-main">Skip to content</a>
+  <div class="site-header-wrap">
+    <header class="site-header policy-header">
+      <a class="site-brand" href="/" aria-label="Yong Farm home">
+        <img src="/img/brand-mark.svg" alt="" width="64" height="64" />
+        <span>Yong Farm<small>GOOD FOOD, GROWN WITH CARE</small></span>
+      </a>
+      <a class="button button-light" href="/">Back to Yong Farm</a>
+    </header>
+  </div>
+  <main class="policy-main" id="policy-main" tabindex="-1">
+    <slot />
+  </main>
+  <footer class="policy-footer">
+    <span>© {new Date().getFullYear()} Yong Farm</span>
+    <nav aria-label="Policy navigation">
+      <a href="/delivery">Delivery &amp; payment</a>
+      <a href="/privacy">Privacy notice</a>
+      <a href="/#order">Place an order</a>
+    </nav>
+  </footer>
+</BaseLayout>

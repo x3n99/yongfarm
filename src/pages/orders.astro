@@ -1,15 +1,45 @@
 ---
 import AdminLayout from '@/components/AdminLayout.astro';
 import { queryAll, type OrderRecord } from '@/lib/data';
-const rows = await queryAll<OrderRecord>((from, to) => Astro.locals.supabase.from('pesanan').select('*')
-  .order('created_at', { ascending: false }).order('id', { ascending: false }).range(from, to));
+import { formatMoney } from '@/lib/dates';
+const [rows, sales] = await Promise.all([
+  queryAll<OrderRecord>((from, to) => Astro.locals.supabase.from('pesanan').select('*')
+    .order('created_at', { ascending: false }).order('id', { ascending: false }).range(from, to)),
+  queryAll<{ id_penjualan: number; order_id: number; total_harga: number | string }>((from, to) => Astro.locals.supabase
+    .from('penjualan').select('id_penjualan,order_id,total_harga').not('order_id', 'is', null)
+    .order('id_penjualan').range(from, to)),
+]);
+const salesByOrder = new Map(sales.map((sale) => [sale.order_id, sale]));
 ---
 <AdminLayout title="Orders">
   <section class="panel stack"><h1>Customer orders</h1>
-    <div class="table-wrap"><table><thead><tr><th>Received</th><th>Name / contact</th><th>Address</th><th>Product</th><th>Quantity</th><th>Message</th><th>Status</th></tr></thead><tbody>
-      {rows.map((row) => <tr><td>{new Date(row.created_at).toLocaleString()}</td><td>{row.nama}<br /><a href={`tel:${row.no_hp}`}>{row.no_hp}</a></td><td>{row.alamat}</td><td>{row.produk}</td><td>{row.jumlah} {row.satuan}</td><td>{row.pesan}</td><td>
-        <form class="stack" method="post" action="/api/actions"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><select name="status"><option selected={row.status === 'Pending'}>Pending</option><option selected={row.status === 'Processing'}>Processing</option><option selected={row.status === 'Completed'}>Completed</option></select><button>Update</button></form>
-      </td></tr>)}
+    <p class="muted">Completing a processing order records one linked sale using the price effective that day, updating sales, revenue, and stock automatically. Historical completed orders are not converted automatically to prevent duplicate sales.</p>
+    <div class="table-wrap"><table><thead><tr><th>Received</th><th>Name / contact</th><th>Address</th><th>Product</th><th>Quantity</th><th>Message</th><th>Status</th><th>Sale / action</th></tr></thead><tbody>
+      {rows.map((row) => {
+        const sale = salesByOrder.get(row.id);
+        return <tr>
+          <td>{new Date(row.created_at).toLocaleString()}</td>
+          <td>{row.nama}<br /><a href={`tel:${row.no_hp}`}>{row.no_hp}</a></td>
+          <td>{row.alamat}</td>
+          <td>{row.produk}</td>
+          <td>{row.jumlah} {row.satuan}</td>
+          <td>{row.pesan}</td>
+          <td>{row.status}</td>
+          <td>
+            {row.status === 'Pending' && <div class="stack">
+              <form method="post" action="/api/actions"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value="Processing" /><button>Start processing</button></form>
+              <form method="post" action="/api/actions" onsubmit="return confirm('Cancel this order? This cannot be undone.');"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value="Cancelled" /><button class="danger">Cancel</button></form>
+            </div>}
+            {row.status === 'Processing' && <div class="stack">
+              <form method="post" action="/api/actions"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value="Completed" /><button>Complete &amp; record sale</button></form>
+              <form method="post" action="/api/actions" onsubmit="return confirm('Cancel this order? This cannot be undone.');"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value="Cancelled" /><button class="danger">Cancel</button></form>
+            </div>}
+            {row.status === 'Completed' && sale && <a href="/sales">Sale #{sale.id_penjualan} · {formatMoney(sale.total_harga)}</a>}
+            {row.status === 'Completed' && !sale && <span class="muted">Historical order — review Sales manually</span>}
+            {row.status === 'Cancelled' && <span class="muted">No sale recorded</span>}
+          </td>
+        </tr>;
+      })}
     </tbody></table></div>
   </section>
 </AdminLayout>

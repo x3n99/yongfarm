@@ -1,0 +1,33 @@
+---
+import PolicyLayout from '@/components/PolicyLayout.astro';
+---
+
+<PolicyLayout title="Privacy notice">
+  <p class="eyebrow"><span class="eyebrow-mark"></span> Your information</p>
+  <h1 class="policy-title">Privacy notice</h1>
+  <p class="policy-intro">This notice explains how Yong Farm uses the details you provide when you submit an order request through this website.</p>
+
+  <div class="policy-copy">
+    <section>
+      <h2>Information we collect</h2>
+      <p>For an order request, we collect your name, phone number, delivery address, selected product, quantity and any optional note you provide. This website does not collect payment card or bank-login details.</p>
+    </section>
+    <section>
+      <h2>How we use it</h2>
+      <p>We use these details to review your request, check availability, confirm price and delivery, contact you and maintain order records.</p>
+    </section>
+    <section>
+      <h2>Storage and access</h2>
+      <p>Order records are stored in Yong Farm’s Supabase database. The website is hosted on Vercel, and these providers process information needed to run the service. Access to order records through the admin tools is restricted to authorised administrator accounts.</p>
+    </section>
+    <section>
+      <h2>Retention and your requests</h2>
+      <p>We keep order details only as needed to respond to your request and meet applicable business or legal record requirements. For questions or to request access, correction or deletion, contact <a href="mailto:yongfarm@gmail.com">yongfarm@gmail.com</a>. Requests are handled subject to applicable requirements.</p>
+    </section>
+  </div>
+
+  <aside class="policy-notice">
+    <strong>Initial notice</strong>
+    <p>Our exact record-retention period has not been set yet. This notice will be updated as Yong Farm’s data-handling practices are finalized.</p>
+  </aside>
+</PolicyLayout>
