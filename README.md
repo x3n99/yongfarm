@@ -41,11 +41,12 @@ npm install
 npm run dev
 ```
 
-For production:
+## Deploy to Vercel
 
-```sh
-npm run build
-npm run start
-```
+1. Import the project into Vercel and set the **Root Directory** to this project.
+2. Select the **Astro** framework preset. Use `npm run build` as the build command.
+3. Disable the **Output Directory** override so `@astrojs/vercel` can configure its output. If Vercel requires an explicit directory, set it to `.vercel/output`. Do not use `dist` or `dist/server/entry.mjs`.
+4. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` under **Project Settings → Environment Variables** for Production (and Preview if needed). Use the Supabase publishable/anon key, never the `service_role` secret.
+5. Redeploy after changing settings or environment variables. If a function still tries to import `dist/server/entry.mjs`, clear the Vercel build cache and redeploy the latest commit; the build log should show `adapter: @astrojs/vercel`.
 
-The server-rendered Node app must be deployed to a Node-compatible host. `npm run build` runs Astro's diagnostic check, TypeScript check, and production build. Reports can be exported as CSV or printed/saved to PDF from the browser.
+`npm run build` runs Astro diagnostics, TypeScript checks, and the production build. Reports can be exported as CSV or printed/saved to PDF from the browser.
