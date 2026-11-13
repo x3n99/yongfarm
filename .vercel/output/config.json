@@ -1,0 +1,83 @@
+{
+	"version": 3,
+	"routes": [
+		{
+			"src": "^/_astro(?:/(.*))$",
+			"headers": {
+				"cache-control": "public, max-age=31536000, immutable"
+			},
+			"continue": true
+		},
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/_server-islands/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/_image/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/actions/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/login/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/logout/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/api/reports\\.csv$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/auth/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/dashboard/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/orders/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/prices/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/production/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/reports/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/sales/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/stock/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/404/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/.*$",
+			"dest": "_render"
+		}
+	]
+}
