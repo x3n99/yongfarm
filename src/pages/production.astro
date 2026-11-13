@@ -1,0 +1,50 @@
+---
+import AdminLayout from '@/components/AdminLayout.astro';
+import { queryAll, type ProductionRecord } from '@/lib/data';
+const params = Astro.url.searchParams;
+const from = params.get('from') ?? '';
+const to = params.get('to') ?? '';
+const q = params.get('q') ?? '';
+const rows = await queryAll<ProductionRecord>((start, end) => {
+  let request = Astro.locals.supabase.from('produksi').select('*')
+    .order('tanggal', { ascending: false }).order('id_produksi', { ascending: false });
+  if (from) request = request.gte('tanggal', from);
+  if (to) request = request.lte('tanggal', to);
+  if (q) request = request.ilike('kondisi_ayam', `%${q}%`);
+  return request.range(start, end);
+});
+---
+<AdminLayout title="Production">
+  <section class="panel stack">
+    <h1>Production records</h1>
+    <form class="filters" method="get">
+      <label>Search condition<input name="q" value={q} /></label>
+      <label>From<input type="date" name="from" value={from} /></label>
+      <label>To<input type="date" name="to" value={to} /></label>
+      <button>Filter</button>
+    </form>
+    <details class="panel"><summary>Add production record</summary>
+      <form class="form-grid" method="post" action="/api/actions">
+        <input type="hidden" name="action" value="production_create" />
+        <label>Date<input type="date" name="tanggal" required /></label>
+        <label>Eggs<input type="number" name="jumlah_butir" min="0" step="1" required /></label>
+        <label>Weight (KG)<input type="number" name="jumlah_kg" min="0" step="0.01" required /></label>
+        <label>Feed (KG)<input type="number" name="pakan_kg" min="0" step="0.01" required /></label>
+        <label class="wide">Chicken condition<input name="kondisi_ayam" maxlength="255" required /></label>
+        <button class="wide">Save record</button>
+      </form>
+    </details>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Eggs</th><th>KG</th><th>Feed (KG)</th><th>Condition</th><th>Actions</th></tr></thead>
+      <tbody>{rows.map((row) => <tr>
+        <td>{row.tanggal}</td><td>{row.jumlah_butir}</td><td>{row.jumlah_kg}</td><td>{row.pakan_kg}</td><td>{row.kondisi_ayam}</td>
+        <td><details><summary>Edit</summary><form class="inline-form" method="post" action="/api/actions">
+          <input type="hidden" name="action" value="production_update" /><input type="hidden" name="id" value={row.id_produksi} />
+          <label>Date<input type="date" name="tanggal" value={row.tanggal} required /></label><label>Eggs<input type="number" name="jumlah_butir" min="0" value={row.jumlah_butir} required /></label>
+          <label>KG<input type="number" name="jumlah_kg" min="0" step=".01" value={row.jumlah_kg} required /></label><label>Feed KG<input type="number" name="pakan_kg" min="0" step=".01" value={row.pakan_kg} required /></label>
+          <label>Condition<input name="kondisi_ayam" value={row.kondisi_ayam} required /></label><button>Update</button>
+        </form></details>
+        <form method="post" action="/api/actions"><input type="hidden" name="action" value="production_delete" /><input type="hidden" name="id" value={row.id_produksi} /><button class="danger">Delete</button></form></td>
+      </tr>)}</tbody>
+    </table></div>
+  </section>
+</AdminLayout>

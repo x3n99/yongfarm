@@ -1,0 +1,27 @@
+---
+import AdminLayout from '@/components/AdminLayout.astro';
+import { query, queryAll, type PriceRecord } from '@/lib/data';
+import { formatMoney } from '@/lib/dates';
+const [prices, products] = await Promise.all([
+  queryAll<PriceRecord>((from, to) => Astro.locals.supabase.from('harga').select('*')
+    .order('tanggal_berlaku', { ascending: false }).order('id_harga', { ascending: false }).range(from, to)),
+  query(Astro.locals.supabase.from('produk').select('nama').order('nama')),
+]);
+---
+<AdminLayout title="Prices">
+  <section class="panel stack">
+    <h1>Price records</h1>
+    <details class="panel"><summary>Add a price</summary><form class="form-grid" method="post" action="/api/actions">
+      <input type="hidden" name="action" value="price_create" />
+      <label>Product<select name="produk" required>{products.map((product) => <option value={product.nama}>{product.nama}</option>)}</select></label>
+      <label>Price per egg<input type="number" name="harga" min="0" step=".01" required /></label>
+      <label>Effective date<input type="date" name="tanggal_berlaku" required /></label>
+      <button class="wide">Save price</button>
+    </form></details>
+    <div class="table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Effective date</th><th>Action</th></tr></thead><tbody>
+      {prices.map((price) => <tr><td>{price.produk}</td><td>{formatMoney(price.harga)}</td><td>{price.tanggal_berlaku}</td><td>
+        <form method="post" action="/api/actions"><input type="hidden" name="action" value="price_delete" /><input type="hidden" name="id" value={price.id_harga} /><button class="danger">Delete</button></form>
+      </td></tr>)}
+    </tbody></table></div>
+  </section>
+</AdminLayout>

@@ -1,0 +1,27 @@
+---
+import AdminLayout from '@/components/AdminLayout.astro';
+import { loadDashboard, requireAdmin } from '@/lib/data';
+import { formatMoney } from '@/lib/dates';
+const user = await requireAdmin(Astro);
+if (user instanceof Response) return user;
+const stats = await loadDashboard(Astro.locals.supabase);
+const max = Math.max(1, ...stats.chart.flatMap((day) => [day.production, day.sales]));
+---
+<AdminLayout title="Dashboard">
+  <div class="stats">
+    <article class="stat-card">Total stock<strong>{stats.stock.toLocaleString()} eggs</strong></article>
+    <article class="stat-card">Production today<strong>{stats.todayProduction.toLocaleString()} eggs</strong></article>
+    <article class="stat-card">Production this month<strong>{stats.monthProduction.toLocaleString()} eggs</strong></article>
+    <article class="stat-card">Sales this month<strong>{stats.monthSales.toLocaleString()} eggs</strong></article>
+    <article class="stat-card">Revenue this month<strong>{formatMoney(stats.monthRevenue)}</strong></article>
+  </div>
+  <section class="panel">
+    <div class="section-heading"><div><h2>Production &amp; sales</h2><p class="muted">Last seven days, measured in eggs</p></div><span class="muted">■ Production &nbsp; <span style="color:#c69a3a">■ Sales</span></span></div>
+    <div class="bar-chart">
+      {stats.chart.map((day) => <div class="bar-day">
+        <div class="bar-pair"><span class="bar" title={`${day.production} produced`} style={`height:${Math.max(3, day.production / max * 100)}%`}></span><span class="bar sales" title={`${day.sales} sold`} style={`height:${Math.max(3, day.sales / max * 100)}%`}></span></div>
+        <small>{new Date(`${day.date}T00:00:00`).toLocaleDateString('en', { day: 'numeric', month: 'short' })}</small>
+      </div>)}
+    </div>
+  </section>
+</AdminLayout>

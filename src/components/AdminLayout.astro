@@ -1,0 +1,36 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { requireAdmin } from '@/lib/data';
+const { title } = Astro.props;
+const user = await requireAdmin(Astro);
+if (user instanceof Response) return user;
+const navigation = [
+  ['/dashboard', 'Dashboard'],
+  ['/production', 'Production'],
+  ['/sales', 'Sales'],
+  ['/stock', 'Stock'],
+  ['/prices', 'Prices'],
+  ['/orders', 'Orders'],
+  ['/reports', 'Reports'],
+];
+---
+<BaseLayout title={title}>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/dashboard"><img src="https://x3n99.github.io/logotelur.png" alt="" /> Yong Farm</a>
+      <nav aria-label="Admin navigation">
+        {navigation.map(([href, label]) => <a class:list={['nav-link', Astro.url.pathname === href && 'active']} aria-current={Astro.url.pathname === href ? 'page' : undefined} href={href}>{label}</a>)}
+      </nav>
+      <form method="post" action="/api/logout">
+        <button class="nav-link logout" type="submit">Sign out</button>
+      </form>
+    </aside>
+    <main class="admin-main">
+      <header class="topbar"><span>{title}</span><span class="user-label">Admin</span></header>
+      <div class="page-content">
+        <slot />
+      </div>
+      <footer class="footer">&copy; {new Date().getFullYear()} Yong Farm</footer>
+    </main>
+  </div>
+</BaseLayout>

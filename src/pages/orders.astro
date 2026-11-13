@@ -1,0 +1,15 @@
+---
+import AdminLayout from '@/components/AdminLayout.astro';
+import { queryAll, type OrderRecord } from '@/lib/data';
+const rows = await queryAll<OrderRecord>((from, to) => Astro.locals.supabase.from('pesanan').select('*')
+  .order('created_at', { ascending: false }).order('id', { ascending: false }).range(from, to));
+---
+<AdminLayout title="Orders">
+  <section class="panel stack"><h1>Customer orders</h1>
+    <div class="table-wrap"><table><thead><tr><th>Received</th><th>Name / contact</th><th>Address</th><th>Product</th><th>Quantity</th><th>Message</th><th>Status</th></tr></thead><tbody>
+      {rows.map((row) => <tr><td>{new Date(row.created_at).toLocaleString()}</td><td>{row.nama}<br /><a href={`tel:${row.no_hp}`}>{row.no_hp}</a></td><td>{row.alamat}</td><td>{row.produk}</td><td>{row.jumlah} {row.satuan}</td><td>{row.pesan}</td><td>
+        <form class="stack" method="post" action="/api/actions"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><select name="status"><option selected={row.status === 'Pending'}>Pending</option><option selected={row.status === 'Processing'}>Processing</option><option selected={row.status === 'Completed'}>Completed</option></select><button>Update</button></form>
+      </td></tr>)}
+    </tbody></table></div>
+  </section>
+</AdminLayout>

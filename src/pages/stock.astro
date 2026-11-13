@@ -1,0 +1,8 @@
+---
+import AdminLayout from '@/components/AdminLayout.astro';
+import { loadDashboard } from '@/lib/data';
+const stats = await loadDashboard(Astro.locals.supabase);
+---
+<AdminLayout title="Stock">
+  <section class="panel"><h1>Egg stock</h1><p class="muted">Stock is calculated as total production minus total sales.</p><p><strong style="font-size:2.5rem">{stats.stock.toLocaleString()} eggs</strong></p><p><a href="/production">View production</a> &middot; <a href="/sales">View sales</a></p></section>
+</AdminLayout>

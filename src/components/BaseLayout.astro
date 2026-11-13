@@ -1,0 +1,22 @@
+---
+import '../styles/global.css';
+interface Props { title: string }
+const { title } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Fresh farm eggs, thoughtfully raised and carefully selected. Discover Yong Farm favourites and place an order." />
+    <meta name="theme-color" content="#fbfaf6" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${title} | Yong Farm`} />
+    <meta property="og:description" content="Good eggs, from our farm to your table." />
+    <link rel="icon" type="image/svg+xml" href="/img/brand-mark.svg" />
+    <title>{title} | Yong Farm</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
