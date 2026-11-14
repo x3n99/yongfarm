@@ -1,23 +1,46 @@
 ---
 import AdminLayout from '@/components/AdminLayout.astro';
 import { loadDashboard, requireAdmin } from '@/lib/data';
-import { formatMoney } from '@/lib/dates';
+import { businessDate, formatMoney } from '@/lib/dates';
 const user = await requireAdmin(Astro);
 if (user instanceof Response) return user;
 const stats = await loadDashboard(Astro.locals.supabase);
 const max = Math.max(1, ...stats.chart.flatMap((day) => [day.production, day.sales]));
+const today = new Date(`${businessDate()}T00:00:00`).toLocaleDateString('en-MY', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
 ---
 <AdminLayout title="Dashboard">
-  <div class="stats">
-    <article class="stat-card">Total stock<strong>{stats.stock.toLocaleString()} eggs</strong></article>
-    <article class="stat-card">Production today<strong>{stats.todayProduction.toLocaleString()} eggs</strong></article>
-    <article class="stat-card">Production this month<strong>{stats.monthProduction.toLocaleString()} eggs</strong></article>
-    <article class="stat-card">Sales this month<strong>{stats.monthSales.toLocaleString()} eggs</strong></article>
-    <article class="stat-card">Revenue this month<strong>{formatMoney(stats.monthRevenue)}</strong></article>
+  <header class="dashboard-heading">
+    <div>
+      <p class="eyebrow">Farm operations</p>
+      <h1>Farm overview</h1>
+      <p class="muted">Production, sales and stock at a glance.</p>
+    </div>
+    <div class="dashboard-tools">
+      <span class="dashboard-date">{today}</span>
+      <a class="button dashboard-action" href="/production">Record production</a>
+    </div>
+  </header>
+  <div class="stats dashboard-stats">
+    <article class="stat-card"><span class="stat-label">Total stock</span><strong>{stats.stock.toLocaleString()} eggs</strong><small>Production less sales</small></article>
+    <article class="stat-card"><span class="stat-label">Production today</span><strong>{stats.todayProduction.toLocaleString()} eggs</strong><small>Recorded today</small></article>
+    <article class="stat-card"><span class="stat-label">Revenue this month</span><strong>{formatMoney(stats.monthRevenue)}</strong><small>From recorded sales</small></article>
+    <article class="stat-card"><span class="stat-label">Production this month</span><strong>{stats.monthProduction.toLocaleString()} eggs</strong><small>Month to date</small></article>
+    <article class="stat-card"><span class="stat-label">Sales this month</span><strong>{stats.monthSales.toLocaleString()} eggs</strong><small>Month to date</small></article>
   </div>
-  <section class="panel">
-    <div class="section-heading"><div><h2>Production &amp; sales</h2><p class="muted">Last seven days, measured in eggs</p></div><span class="muted">■ Production &nbsp; <span style="color:#c69a3a">■ Sales</span></span></div>
-    <div class="bar-chart">
+  <section class="panel dashboard-chart">
+    <div class="section-heading">
+      <div><h2>Production &amp; sales</h2><p class="muted">Daily egg totals over the last seven days</p></div>
+      <div class="chart-legend" aria-label="Chart legend">
+        <span><i class="legend-swatch production" aria-hidden="true"></i>Production</span>
+        <span><i class="legend-swatch sales" aria-hidden="true"></i>Sales</span>
+      </div>
+    </div>
+    <div class="bar-chart" role="img" aria-label="Bar chart comparing egg production and sales for the last seven days">
       {stats.chart.map((day) => <div class="bar-day">
         <div class="bar-pair"><span class="bar" title={`${day.production} produced`} style={`height:${Math.max(3, day.production / max * 100)}%`}></span><span class="bar sales" title={`${day.sales} sold`} style={`height:${Math.max(3, day.sales / max * 100)}%`}></span></div>
         <small>{new Date(`${day.date}T00:00:00`).toLocaleDateString('en', { day: 'numeric', month: 'short' })}</small>

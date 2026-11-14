@@ -16,15 +16,27 @@ const navigation = [
 ---
 <BaseLayout title={title}>
   <div class="admin-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" data-admin-sidebar>
       <a class="brand" href="/dashboard"><img src="https://x3n99.github.io/logotelur.png" alt="" /> Yong Farm</a>
-      <nav aria-label="Admin navigation">
-        {navigation.map(([href, label]) => <a class:list={['nav-link', Astro.url.pathname === href && 'active']} aria-current={Astro.url.pathname === href ? 'page' : undefined} href={href}>{label}</a>)}
-      </nav>
-      <form method="post" action="/api/logout">
-        <button class="nav-link logout" type="submit">Sign out</button>
-      </form>
+      <button class="admin-menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="admin-navigation" data-admin-menu-toggle>
+        <svg class="menu-icon-burger" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <svg class="menu-icon-close" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+          <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span class="menu-label">Menu</span>
+      </button>
+      <div class="sidebar-menu" id="admin-navigation" data-admin-menu>
+        <nav aria-label="Admin navigation">
+          {navigation.map(([href, label]) => <a class:list={['nav-link', Astro.url.pathname === href && 'active']} aria-current={Astro.url.pathname === href ? 'page' : undefined} href={href}>{label}</a>)}
+        </nav>
+        <form method="post" action="/api/logout">
+          <button class="nav-link logout" type="submit">Sign out</button>
+        </form>
+      </div>
     </aside>
+    <button class="admin-menu-backdrop" type="button" aria-label="Close navigation menu" tabindex="-1" data-admin-menu-close></button>
     <main class="admin-main">
       <header class="topbar"><span>{title}</span><span class="user-label">Admin</span></header>
       <div class="page-content">
@@ -34,3 +46,40 @@ const navigation = [
     </main>
   </div>
 </BaseLayout>
+<script>
+  const initializeAdminMenu = () => {
+    const sidebar = document.querySelector<HTMLElement>('[data-admin-sidebar]');
+    const toggle = sidebar?.querySelector<HTMLButtonElement>('[data-admin-menu-toggle]');
+    const menu = sidebar?.querySelector<HTMLElement>('[data-admin-menu]');
+    const menuLabel = toggle?.querySelector<HTMLElement>('.menu-label');
+      const backdrop = document.querySelector<HTMLButtonElement>('[data-admin-menu-close]');
+      if (!sidebar || !toggle || !menu || !menuLabel || !backdrop || sidebar.classList.contains('has-mobile-menu')) return;
+    sidebar.classList.add('has-mobile-menu');
+
+    const setMenuOpen = (open: boolean) => {
+      sidebar.classList.toggle('menu-open', open);
+        document.body.classList.toggle('admin-menu-open', open && window.matchMedia('(max-width: 700px)').matches);
+      toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close sidebar menu' : 'Open sidebar menu');
+      menuLabel.textContent = open ? 'Close' : 'Menu';
+        if (open) menu.querySelector<HTMLElement>('[aria-current="page"]')?.focus();
+        else toggle.focus();
+    };
+
+    toggle.addEventListener('click', () => {
+      setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+      backdrop.addEventListener('click', () => setMenuOpen(false));
+    sidebar.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && sidebar.classList.contains('menu-open')) {
+        setMenuOpen(false);
+      }
+    });
+      window.matchMedia('(min-width: 701px)').addEventListener('change', (event) => {
+        if (event.matches && sidebar.classList.contains('menu-open')) setMenuOpen(false);
+      });
+  };
+
+  document.addEventListener('astro:page-load', initializeAdminMenu);
+  initializeAdminMenu();
+</script>

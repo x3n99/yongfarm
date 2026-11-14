@@ -32,9 +32,9 @@ const kgPerEgg = production.reduce((sum, row) => sum + Number(row.jumlah_kg), 0)
     </details>
     <div class="table-wrap"><table><thead><tr><th>Date</th><th>Buyer</th><th>Product</th><th>Quantity</th><th>Eggs</th><th>KG</th><th>Total</th><th>Source</th><th>Actions</th></tr></thead>
       <tbody>{rows.map((row) => <tr>
-        <td>{row.tanggal}</td><td>{row.nama_pembeli}</td><td>{row.produk}</td><td>{row.jumlah_unit} {row.satuan}</td><td>{row.jumlah_butir}</td><td>{row.jumlah_kg}</td><td>{formatMoney(row.total_harga)}</td>
-        <td>{row.order_id ? <a href="/orders">Order #{row.order_id}</a> : 'Direct sale'}</td>
-        <td>{row.order_id
+        <td data-label="Date">{row.tanggal}</td><td data-label="Buyer">{row.nama_pembeli}</td><td data-label="Product">{row.produk}</td><td data-label="Quantity">{row.jumlah_unit} {row.satuan}</td><td data-label="Eggs">{row.jumlah_butir}</td><td data-label="KG">{row.jumlah_kg}</td><td data-label="Total">{formatMoney(row.total_harga)}</td>
+        <td data-label="Source">{row.order_id ? <a href="/orders">Order #{row.order_id}</a> : 'Direct sale'}</td>
+        <td data-label="Actions">{row.order_id
           ? <span class="muted">Managed by order</span>
           : <>
             <details><summary>Edit</summary><form class="inline-form" method="post" action="/api/actions">

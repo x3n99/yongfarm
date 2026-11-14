@@ -11,7 +11,7 @@ const error = Astro.url.searchParams.get('error');
       <p class="muted">Sign in to access the administration dashboard.</p>
       {error && <p class="notice">{error}</p>}
       <form method="post" action="/api/login">
-        <label>Email<input type="email" name="email" autocomplete="username" required /></label>
+        <label>Username or email<input type="text" name="identifier" autocomplete="username" required /></label>
         <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
         <button type="submit">Sign in</button>
       </form>

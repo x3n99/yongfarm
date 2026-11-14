@@ -18,14 +18,14 @@ const salesByOrder = new Map(sales.map((sale) => [sale.order_id, sale]));
       {rows.map((row) => {
         const sale = salesByOrder.get(row.id);
         return <tr>
-          <td>{new Date(row.created_at).toLocaleString()}</td>
-          <td>{row.nama}<br /><a href={`tel:${row.no_hp}`}>{row.no_hp}</a></td>
-          <td>{row.alamat}</td>
-          <td>{row.produk}</td>
-          <td>{row.jumlah} {row.satuan}</td>
-          <td>{row.pesan}</td>
-          <td>{row.status}</td>
-          <td>
+          <td data-label="Received">{new Date(row.created_at).toLocaleString()}</td>
+          <td data-label="Name / contact">{row.nama}<br /><a href={`tel:${row.no_hp}`}>{row.no_hp}</a></td>
+          <td data-label="Address">{row.alamat}</td>
+          <td data-label="Product">{row.produk}</td>
+          <td data-label="Quantity">{row.jumlah} {row.satuan}</td>
+          <td data-label="Message">{row.pesan}</td>
+          <td data-label="Status">{row.status}</td>
+          <td data-label="Sale / action">
             {row.status === 'Pending' && <div class="stack">
               <form method="post" action="/api/actions"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value="Processing" /><button>Start processing</button></form>
               <form method="post" action="/api/actions" onsubmit="return confirm('Cancel this order? This cannot be undone.');"><input type="hidden" name="action" value="order_status" /><input type="hidden" name="id" value={row.id} /><input type="hidden" name="status" value="Cancelled" /><button class="danger">Cancel</button></form>

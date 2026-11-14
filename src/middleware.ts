@@ -38,10 +38,25 @@ export const onRequest = defineMiddleware(async (context, next) => {
   });
 
   const { data, error } = await context.locals.supabase.auth.getUser();
-  if (error && error.name !== 'AuthSessionMissingError') {
+  const invalidRefreshTokenCodes = ['refresh_token_not_found', 'invalid_refresh_token', 'refresh_token_already_used'];
+  const invalidRefreshToken = error !== null && 'code' in error
+    && typeof error.code === 'string'
+    && invalidRefreshTokenCodes.includes(error.code);
+
+  if (invalidRefreshToken) {
+    const cookieNames = cookieHeader.split(';').flatMap((cookie) => {
+      const separator = cookie.indexOf('=');
+      return separator < 0 ? [] : [cookie.slice(0, separator).trim()];
+    });
+    for (const name of cookieNames) {
+      if (/^sb-.+-auth-token(?:\.\d+)?$/.test(name) || name === 'sb-access-token' || name === 'sb-refresh-token') {
+        context.cookies.delete(name, { path: '/' });
+      }
+    }
+  } else if (error && error.name !== 'AuthSessionMissingError') {
     throw error;
   }
-  context.locals.user = data.user;
+  context.locals.user = invalidRefreshToken ? null : data.user;
 
   const protectedPaths = ['/dashboard', '/production', '/sales', '/stock', '/prices', '/orders', '/reports', '/api/reports.csv'];
   const path = context.url.pathname.replace(/\/+$/, '') || '/';

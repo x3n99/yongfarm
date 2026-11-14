@@ -19,7 +19,7 @@ const [prices, products] = await Promise.all([
       <button class="wide">Save price</button>
     </form></details>
     <div class="table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Effective date</th><th>Action</th></tr></thead><tbody>
-      {prices.map((price) => <tr><td>{price.produk}</td><td>{formatMoney(price.harga)}</td><td>{price.tanggal_berlaku}</td><td>
+      {prices.map((price) => <tr><td data-label="Product">{price.produk}</td><td data-label="Price">{formatMoney(price.harga)}</td><td data-label="Effective date">{price.tanggal_berlaku}</td><td data-label="Action">
         <form method="post" action="/api/actions"><input type="hidden" name="action" value="price_delete" /><input type="hidden" name="id" value={price.id_harga} /><button class="danger">Delete</button></form>
       </td></tr>)}
     </tbody></table></div>
