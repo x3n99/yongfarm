@@ -509,6 +509,7 @@ details > summary { color: var(--forest); cursor: pointer; font-weight: 700; }
   .sidebar.has-mobile-menu.menu-open .sidebar-menu { display: flex; width: 100%; flex: 1; padding-top: .45rem; border-top: 1px solid rgb(255 255 255 / 15%); }
   .sidebar.has-mobile-menu.menu-open nav { grid-template-columns: 1fr; gap: .25rem; }
   .sidebar.has-mobile-menu.menu-open nav .nav-link { min-height: 44px; padding: .65rem .8rem; font-size: .87rem; text-align: left; }
+  .sidebar.has-mobile-menu.menu-open .sidebar-menu form { margin-top: auto; }
   .sidebar.has-mobile-menu.menu-open .admin-menu-toggle { position: absolute; top: 1.15rem; right: 1rem; width: 40px; min-height: 40px; justify-content: center; padding: .5rem; }
   .sidebar.has-mobile-menu.menu-open .menu-icon-burger { display: none; }
   .sidebar.has-mobile-menu.menu-open .menu-icon-close { display: block; }
