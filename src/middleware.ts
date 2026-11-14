@@ -37,7 +37,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     },
   });
 
-  const { data, error } = await context.locals.supabase.auth.getUser();
+  const { data, error } = await context.locals.supabase.auth.getClaims();
+  const claims = data?.claims;
   const invalidRefreshTokenCodes = ['refresh_token_not_found', 'invalid_refresh_token', 'refresh_token_already_used'];
   const invalidRefreshToken = error !== null && 'code' in error
     && typeof error.code === 'string'
@@ -56,13 +57,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
   } else if (error && error.name !== 'AuthSessionMissingError') {
     throw error;
   }
-  context.locals.user = invalidRefreshToken ? null : data.user;
+  const user = invalidRefreshToken || !claims
+    ? null
+    : { app_metadata: claims.app_metadata ?? {} };
+  context.locals.user = user;
 
   const protectedPaths = ['/dashboard', '/production', '/sales', '/stock', '/prices', '/orders', '/reports', '/api/reports.csv'];
   const path = context.url.pathname.replace(/\/+$/, '') || '/';
   if (protectedPaths.includes(path)) {
-    if (!data.user) return context.redirect('/auth?error=Please%20sign%20in%20first');
-    if (data.user.app_metadata.role !== 'admin') {
+    if (!user) return context.redirect('/auth?error=Please%20sign%20in%20first');
+    if (user.app_metadata.role !== 'admin') {
       return new Response('Administrator access is required.', { status: 403 });
     }
   }

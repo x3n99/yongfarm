@@ -12,7 +12,7 @@ declare global {
   namespace App {
     interface Locals {
       supabase: SupabaseClient;
-      user: User | null;
+      user: Pick<User, 'app_metadata'> | null;
     }
   }
 }
