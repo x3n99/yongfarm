@@ -4,7 +4,6 @@ import { queryAll, type PriceRecord, type ProductRecord } from '@/lib/data';
 import { businessDate, formatMoney } from '@/lib/dates';
 import { units } from '@/lib/sales';
 
-if (Astro.locals.user?.app_metadata.role === 'admin') return Astro.redirect('/dashboard');
 const products = await queryAll<ProductRecord>((from, to) => Astro.locals.supabase
   .from('produk').select('*').order('id_produk').range(from, to));
 const prices = await queryAll<PriceRecord>((from, to) => Astro.locals.supabase.from('harga').select('*')
